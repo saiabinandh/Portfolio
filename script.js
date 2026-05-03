@@ -57,8 +57,31 @@ const marqueeTrack = document.querySelector('.marquee-track');
 if (marqueeCard && marqueeTrack) {
     let mouseX = 0; 
     let isHovering = false;
+    let isVideoPlaying = false;
     let currentX = 0;
     let speed = 0;
+
+    // Track if any video is playing to stop the marquee
+    const allVideos = marqueeTrack.querySelectorAll('video');
+    allVideos.forEach(v => {
+        v.addEventListener('play', () => { isVideoPlaying = true; });
+        v.addEventListener('pause', () => { isVideoPlaying = false; });
+        v.addEventListener('ended', () => { isVideoPlaying = false; });
+    });
+
+    // Make arrows clickable for manual navigation
+    const arrowLeft = document.querySelector('.arrow-left');
+    const arrowRight = document.querySelector('.arrow-right');
+    if (arrowLeft) {
+        arrowLeft.addEventListener('click', () => {
+            speed = -15; // Kick-start movement to the left
+        });
+    }
+    if (arrowRight) {
+        arrowRight.addEventListener('click', () => {
+            speed = 15; // Kick-start movement to the right
+        });
+    }
 
     marqueeCard.addEventListener('mousemove', (e) => {
         const rect = marqueeCard.getBoundingClientRect();
@@ -91,11 +114,14 @@ if (marqueeCard && marqueeTrack) {
     });
 
     function animateMarquee() {
-        const baseSpeed = 1.0; // Slow, continuous auto-scroll speed
+        const isMobile = window.innerWidth <= 768;
+        const baseSpeed = isMobile ? 0 : 1.0; // No auto-scroll on mobile
         let targetSpeed = baseSpeed;
 
-        if (isHovering) {
-            // Smooth mouse effect. Max speed scaled down to 5 for a "not fast" interaction
+        if (isVideoPlaying) {
+            targetSpeed = 0; // Stop if video is playing
+        } else if (isHovering) {
+            // Smooth mouse/touch effect
             targetSpeed = mouseX * 5; 
         }
 

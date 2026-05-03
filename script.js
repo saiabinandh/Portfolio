@@ -87,13 +87,15 @@ if (marqueeCard && marqueeTrack) {
     const arrowLeft = document.querySelector('.arrow-left');
     const arrowRight = document.querySelector('.arrow-right');
     if (arrowLeft) {
-        arrowLeft.addEventListener('click', () => {
-            speed = -15; // Kick-start movement to the left
+        arrowLeft.addEventListener('click', (e) => {
+            e.stopPropagation();
+            targetX = currentX + 300; // Slide left
         });
     }
     if (arrowRight) {
-        arrowRight.addEventListener('click', () => {
-            speed = 15; // Kick-start movement to the right
+        arrowRight.addEventListener('click', (e) => {
+            e.stopPropagation();
+            targetX = currentX - 300; // Slide right
         });
     }
 
@@ -142,9 +144,13 @@ if (marqueeCard && marqueeTrack) {
         // Smoothly transition to the target speed
         speed += (targetSpeed - speed) * 0.05;
 
-        if (isVideoPlaying && targetX !== null) {
-            // Smoothly drift currentX to targetX to center the video
-            currentX += (targetX - currentX) * 0.1;
+        // Priority 1: Centering a playing video or manual arrow slide
+        if (targetX !== null) {
+            currentX += (targetX - currentX) * 0.08;
+            if (Math.abs(targetX - currentX) < 0.1) {
+                currentX = targetX;
+                if (!isVideoPlaying) targetX = null; // Only clear if not playing
+            }
         } else {
             currentX -= speed;
         }

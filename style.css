@@ -462,6 +462,15 @@ p {
     object-fit: cover;
 }
 
+/* Ensure correct aspect ratio when in fullscreen */
+.video-item video:fullscreen {
+    object-fit: contain !important;
+}
+
+.video-item video:-webkit-full-screen {
+    object-fit: contain !important;
+}
+
 /* Layouts */
 .split-layout {
     display: grid;

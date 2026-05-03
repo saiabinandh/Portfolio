@@ -110,7 +110,13 @@ if (marqueeCard && marqueeTrack) {
         const rect = marqueeCard.getBoundingClientRect();
         // Mouse X relative to container center (-1 to 1)
         mouseX = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-        isHovering = true;
+        
+        // Only trigger movement when mouse is near the left or right edges (arrows)
+        if (Math.abs(mouseX) > 0.7) {
+            isHovering = true;
+        } else {
+            isHovering = false;
+        }
     });
 
     marqueeCard.addEventListener('mouseleave', () => {
@@ -130,9 +136,16 @@ if (marqueeCard && marqueeTrack) {
     });
 
     marqueeCard.addEventListener('touchmove', (e) => {
+        if (isVideoPlaying) return;
         const rect = marqueeCard.getBoundingClientRect();
         const touch = e.touches[0];
         mouseX = ((touch.clientX - rect.left) / rect.width) * 2 - 1;
+
+        if (Math.abs(mouseX) > 0.7) {
+            isHovering = true;
+        } else {
+            isHovering = false;
+        }
     }, {passive: true});
 
     marqueeCard.addEventListener('touchend', () => {

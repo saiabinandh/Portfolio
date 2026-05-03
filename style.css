@@ -710,10 +710,9 @@ p {
     }
 
     .video-item {
-        width: 100%;
-        max-width: 350px;
-        margin: 0 auto;
-        min-height: 1px; /* Prevents aspect ratio collapse on mobile */
+        width: 280px;
+        flex-shrink: 0;
+        min-height: 1px;
         aspect-ratio: 9/16;
     }
 }

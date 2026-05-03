@@ -57,16 +57,30 @@ const marqueeTrack = document.querySelector('.marquee-track');
 if (marqueeCard && marqueeTrack) {
     let mouseX = 0; 
     let isHovering = false;
-    let isVideoPlaying = false;
     let currentX = 0;
+    let targetX = null;
     let speed = 0;
 
-    // Track if any video is playing to stop the marquee
+    // Track if any video is playing to stop the marquee and center it
     const allVideos = marqueeTrack.querySelectorAll('video');
     allVideos.forEach(v => {
-        v.addEventListener('play', () => { isVideoPlaying = true; });
-        v.addEventListener('pause', () => { isVideoPlaying = false; });
-        v.addEventListener('ended', () => { isVideoPlaying = false; });
+        v.addEventListener('play', (e) => { 
+            isVideoPlaying = true; 
+            const containerRect = marqueeCard.getBoundingClientRect();
+            const videoRect = e.target.getBoundingClientRect();
+            const containerCenter = containerRect.width / 2;
+            const videoCenter = (videoRect.left - containerRect.left) + videoRect.width / 2;
+            const diff = containerCenter - videoCenter;
+            targetX = currentX + diff;
+        });
+        v.addEventListener('pause', () => { 
+            isVideoPlaying = false; 
+            targetX = null;
+        });
+        v.addEventListener('ended', () => { 
+            isVideoPlaying = false; 
+            targetX = null;
+        });
     });
 
     // Make arrows clickable for manual navigation
@@ -128,7 +142,12 @@ if (marqueeCard && marqueeTrack) {
         // Smoothly transition to the target speed
         speed += (targetSpeed - speed) * 0.05;
 
-        currentX -= speed;
+        if (isVideoPlaying && targetX !== null) {
+            // Smoothly drift currentX to targetX to center the video
+            currentX += (targetX - currentX) * 0.1;
+        } else {
+            currentX -= speed;
+        }
 
             // Calculate exact width of one full set of 5 videos + 5 gaps
             const firstVideo = marqueeTrack.children[0];
@@ -139,8 +158,10 @@ if (marqueeCard && marqueeTrack) {
 
                 if (currentX > 0) {
                     currentX -= halfWidth;
+                    if (targetX !== null) targetX -= halfWidth;
                 } else if (currentX <= -halfWidth) {
                     currentX += halfWidth;
+                    if (targetX !== null) targetX += halfWidth;
                 }
 
                 marqueeTrack.style.transform = `translateX(${currentX}px)`;

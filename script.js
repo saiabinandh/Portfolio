@@ -57,6 +57,7 @@ const marqueeTrack = document.querySelector('.marquee-track');
 if (marqueeCard && marqueeTrack) {
     let mouseX = 0; 
     let isHovering = false;
+    let isVideoPlaying = false;
     let currentX = 0;
     let targetX = null;
     let speed = 0;
@@ -88,18 +89,24 @@ if (marqueeCard && marqueeTrack) {
     const arrowRight = document.querySelector('.arrow-right');
     if (arrowLeft) {
         arrowLeft.addEventListener('click', (e) => {
+            if (isVideoPlaying) return; // Disable if playing
             e.stopPropagation();
-            targetX = currentX + 300; // Slide left
+            targetX = currentX + 300;
         });
     }
     if (arrowRight) {
         arrowRight.addEventListener('click', (e) => {
+            if (isVideoPlaying) return; // Disable if playing
             e.stopPropagation();
-            targetX = currentX - 300; // Slide right
+            targetX = currentX - 300;
         });
     }
 
     marqueeCard.addEventListener('mousemove', (e) => {
+        if (isVideoPlaying) {
+            isHovering = false;
+            return;
+        }
         const rect = marqueeCard.getBoundingClientRect();
         // Mouse X relative to container center (-1 to 1)
         mouseX = ((e.clientX - rect.left) / rect.width) * 2 - 1;
@@ -112,6 +119,10 @@ if (marqueeCard && marqueeTrack) {
     });
 
     marqueeCard.addEventListener('touchstart', (e) => {
+        if (isVideoPlaying) {
+            isHovering = false;
+            return;
+        }
         const rect = marqueeCard.getBoundingClientRect();
         const touch = e.touches[0];
         mouseX = ((touch.clientX - rect.left) / rect.width) * 2 - 1;

@@ -184,7 +184,7 @@ if (marqueeCard && marqueeTrack) {
             if (firstVideo) {
                 const videoWidth = firstVideo.offsetWidth;
                 const gap = parseFloat(getComputedStyle(marqueeTrack).gap) || 32;
-                const halfWidth = (videoWidth + gap) * 5;
+                const halfWidth = (videoWidth + gap) * (marqueeTrack.children.length / 2);
 
                 if (currentX > 0) {
                     currentX -= halfWidth;

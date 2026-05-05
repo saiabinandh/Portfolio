@@ -66,21 +66,39 @@ if (marqueeCard && marqueeTrack) {
     const allVideos = marqueeTrack.querySelectorAll('video');
     allVideos.forEach(v => {
         v.addEventListener('play', (e) => { 
+            // Pause all other videos first
+            allVideos.forEach(otherV => {
+                if (otherV !== v) {
+                    otherV.pause();
+                }
+            });
+
             isVideoPlaying = true; 
-            const containerRect = marqueeCard.getBoundingClientRect();
-            const videoRect = e.target.getBoundingClientRect();
-            const containerCenter = containerRect.width / 2;
-            const videoCenter = (videoRect.left - containerRect.left) + videoRect.width / 2;
-            const diff = containerCenter - videoCenter;
-            targetX = currentX + diff;
+            
+            // Centering logic with a slight delay to prevent 'first play' jump on mobile
+            setTimeout(() => {
+                const containerRect = marqueeCard.getBoundingClientRect();
+                const videoRect = e.target.getBoundingClientRect();
+                const containerCenter = containerRect.width / 2;
+                const videoCenter = (videoRect.left - containerRect.left) + videoRect.width / 2;
+                const diff = containerCenter - videoCenter;
+                targetX = currentX + diff;
+            }, 50);
         });
         v.addEventListener('pause', () => { 
-            isVideoPlaying = false; 
-            targetX = null;
+            // Only set isVideoPlaying to false if NO videos are playing
+            const stillPlaying = Array.from(allVideos).some(vid => !vid.paused);
+            if (!stillPlaying) {
+                isVideoPlaying = false; 
+                targetX = null;
+            }
         });
         v.addEventListener('ended', () => { 
-            isVideoPlaying = false; 
-            targetX = null;
+            const stillPlaying = Array.from(allVideos).some(vid => !vid.paused);
+            if (!stillPlaying) {
+                isVideoPlaying = false; 
+                targetX = null;
+            }
         });
     });
 
@@ -124,33 +142,28 @@ if (marqueeCard && marqueeTrack) {
         mouseX = 0; // stop moving
     });
 
+    let touchStartX = 0;
+    let touchMoveX = 0;
+    let isDragging = false;
+    let initialCurrentX = 0;
+
     marqueeCard.addEventListener('touchstart', (e) => {
-        if (isVideoPlaying) {
-            isHovering = false;
-            return;
-        }
-        const rect = marqueeCard.getBoundingClientRect();
-        const touch = e.touches[0];
-        mouseX = ((touch.clientX - rect.left) / rect.width) * 2 - 1;
-        isHovering = true;
-    });
+        if (isVideoPlaying) return;
+        isDragging = true;
+        touchStartX = e.touches[0].clientX;
+        initialCurrentX = currentX;
+        targetX = null; // Stop any auto-slide
+    }, {passive: true});
 
     marqueeCard.addEventListener('touchmove', (e) => {
-        if (isVideoPlaying) return;
-        const rect = marqueeCard.getBoundingClientRect();
-        const touch = e.touches[0];
-        mouseX = ((touch.clientX - rect.left) / rect.width) * 2 - 1;
-
-        if (Math.abs(mouseX) > 0.7) {
-            isHovering = true;
-        } else {
-            isHovering = false;
-        }
+        if (!isDragging || isVideoPlaying) return;
+        touchMoveX = e.touches[0].clientX;
+        const diff = touchMoveX - touchStartX;
+        currentX = initialCurrentX + diff;
     }, {passive: true});
 
     marqueeCard.addEventListener('touchend', () => {
-        isHovering = false;
-        mouseX = 0;
+        isDragging = false;
     });
 
     function animateMarquee() {
@@ -158,10 +171,10 @@ if (marqueeCard && marqueeTrack) {
         const baseSpeed = isMobile ? 0 : 1.0; // No auto-scroll on mobile
         let targetSpeed = baseSpeed;
 
-        if (isVideoPlaying) {
-            targetSpeed = 0; // Stop if video is playing
+        if (isVideoPlaying || isDragging) {
+            targetSpeed = 0; // Stop if video is playing or user is dragging
         } else if (isHovering) {
-            // Smooth mouse/touch effect
+            // Smooth mouse effect (Desktop)
             targetSpeed = mouseX * 5; 
         }
 
